@@ -15,19 +15,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract website
-        run: |
-          set -e
+          - name: Commit extracted files
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          ZIP_FILE="iiti-spark-github-ready.zip"
-          TEMP_DIR="/tmp/iiti-spark-extracted"
+        git add -A
 
-          if [ ! -f "$ZIP_FILE" ]; then
-            echo "ERROR: $ZIP_FILE was not found."
-            echo "Files in repository:"
-            ls -la
-            exit 1
-          fi
+        if git diff --cached --quiet; then
+          echo "No new changes were found."
+        else
+          git fetch origin main
+          git rebase origin/main
+          git commit -m "Extract IITI Spark website"
+          git push
+        fi
 
           rm -rf "$TEMP_DIR"
           mkdir -p "$TEMP_DIR"
