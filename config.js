@@ -8,6 +8,6 @@ window.IITI_SPARK_CONFIG = {
   ALLOWED_DOMAIN: "iiti.ac.in",
   APP_NAME: "IITI Spark",
   TERMS_VERSION: "2026-07-21",
-  DEMO_MODE: true,
+  DEMO_MODE: false,
   CHAT_POLL_MS: 3000
 };
