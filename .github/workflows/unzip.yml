@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Extract ZIP safely
         shell: bash
@@ -75,12 +77,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          git fetch origin main
+          git rebase origin/main || true
+
           git add -A
           git status
 
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Extract IITI Spark website"
+            git commit -m "Extract IITI Spark website" || true
             git push origin HEAD:main
           fi
