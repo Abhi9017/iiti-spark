@@ -1,4 +1,4 @@
-name: Unzip website ZIP
+name: Unzip Website
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract website
+      - name: Extract ZIP
         run: |
           set -e
 
@@ -22,32 +22,32 @@ jobs:
           TEMP_DIR="/tmp/iiti-spark-extracted"
 
           if [ ! -f "$ZIP_FILE" ]; then
-            echo "ERROR: $ZIP_FILE was not found."
-            echo "Files currently in repository:"
+            echo "ZIP file not found."
             ls -la
             exit 1
           fi
 
+          rm -rf "$TEMP_DIR"
           mkdir -p "$TEMP_DIR"
+
           unzip -o "$ZIP_FILE" -d "$TEMP_DIR"
 
-          echo "Extracted files:"
-          find "$TEMP_DIR" -maxdepth 3 -type f | head -100
-
-          # The ZIP normally contains an iiti-spark folder.
           if [ -d "$TEMP_DIR/iiti-spark" ]; then
             SOURCE_DIR="$TEMP_DIR/iiti-spark"
           else
             SOURCE_DIR="$TEMP_DIR"
           fi
 
-          # Copy normal and hidden files, including .github.
+          # Avoid workflow permission error
+          rm -rf "$SOURCE_DIR/.github/workflows"
+
+          # Copy all website files
           cp -a "$SOURCE_DIR"/. .
 
-          # Remove the uploaded ZIP.
+          # Remove ZIP
           rm -f "$ZIP_FILE"
 
-          echo "Repository after extraction:"
+          echo "Final repository files:"
           ls -la
 
       - name: Commit extracted files
@@ -58,8 +58,8 @@ jobs:
           git add -A
 
           if git diff --cached --quiet; then
-            echo "No new changes were found."
+            echo "No changes to commit."
           else
-            git commit -m "Extract IITI Spark website"
-            git push
+            git commit -m "Extract website files"
+            git push origin main
           fi
