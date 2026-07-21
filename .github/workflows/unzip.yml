@@ -5,7 +5,6 @@ on:
 
 permissions:
   contents: write
-  workflows: write
 
 jobs:
   unzip:
@@ -15,53 +14,64 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-          - name: Commit extracted files
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Extract ZIP safely
+        shell: bash
+        run: |
+          set -euo pipefail
 
-        git add -A
+          ZIP_FILE="iiti-spark-github-ready.zip"
+          TEMP_DIR="/tmp/iiti-spark-extracted"
+          SAVED_WORKFLOW="/tmp/unzip.yml"
 
-        if git diff --cached --quiet; then
-          echo "No new changes were found."
-        else
-          git fetch origin main
-          git rebase origin/main
-          git commit -m "Extract IITI Spark website"
-          git push
-        fi
+          if [ ! -f "$ZIP_FILE" ]; then
+            echo "ERROR: $ZIP_FILE was not found in the repository root."
+            echo "Current repository files:"
+            ls -la
+            exit 1
+          fi
 
+          # Preserve the current unzip workflow.
+          cp ".github/workflows/unzip.yml" "$SAVED_WORKFLOW"
+
+          # Prepare temporary extraction directory.
           rm -rf "$TEMP_DIR"
           mkdir -p "$TEMP_DIR"
 
-          unzip -o "$ZIP_FILE" -d "$TEMP_DIR"
+          # Extract the ZIP.
+          unzip -q -o "$ZIP_FILE" -d "$TEMP_DIR"
 
+          # Detect whether the ZIP contains an iiti-spark folder.
           if [ -d "$TEMP_DIR/iiti-spark" ]; then
             SOURCE_DIR="$TEMP_DIR/iiti-spark"
           else
             SOURCE_DIR="$TEMP_DIR"
           fi
 
-          # Copy all files, including hidden files.
+          echo "Using source directory: $SOURCE_DIR"
+
+          # Remove workflows included inside the ZIP.
+          # This prevents pages.yml permission errors.
+          rm -rf "$SOURCE_DIR/.github/workflows"
+
+          # Copy all normal and hidden files.
           cp -a "$SOURCE_DIR"/. .
 
-          # IMPORTANT:
-          # Keep unzip.yml but remove other extracted workflow files.
-          mkdir -p .github/workflows
-          find .github/workflows \
-            -maxdepth 1 \
-            -type f \
-            ! -name "unzip.yml" \
-            -delete
+          # Remove every workflow and restore only unzip.yml.
+          rm -rf ".github/workflows"
+          mkdir -p ".github/workflows"
+          cp "$SAVED_WORKFLOW" ".github/workflows/unzip.yml"
 
-          # Remove ZIP only after successful extraction.
+          # Delete the uploaded ZIP after extraction.
           rm -f "$ZIP_FILE"
 
           echo "Final repository contents:"
           find . -maxdepth 3 -type f | sort
 
-      - name: Commit and push extracted files
+      - name: Commit extracted files
+        shell: bash
         run: |
+          set -euo pipefail
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
@@ -72,5 +82,5 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "Extract IITI Spark website"
-            git push origin main
+            git push origin HEAD:main
           fi
