@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#080611" />
+  <meta name="description" content="An unofficial, student-only social discovery prototype for IIT Indore." />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com; img-src 'self' data: blob: https:; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://accounts.google.com; frame-src https://accounts.google.com https://script.google.com https://script.googleusercontent.com https://*.googleusercontent.com; font-src 'self' data:; base-uri 'self'; form-action 'self';" />
+  <title>IITI Spark — Student Connections</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="config.js"></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+  <div class="noise"></div>
+
+  <main id="app" class="app-shell">
+    <section id="screen-auth" class="screen auth-screen active" aria-labelledby="auth-title">
+      <div class="auth-grid">
+        <div class="brand-panel glass">
+          <div class="brand-lockup">
+            <img class="brand-logo" src="logo.svg" alt="IITI Spark logo" />
+            <div>
+              <p class="eyebrow">UNOFFICIAL CAMPUS PROTOTYPE</p>
+              <h1 id="auth-title">Meet minds.<br /><span>Find your spark.</span></h1>
+            </div>
+          </div>
+
+          <p class="hero-copy">
+            A consent-first student connection space for the IIT Indore community.
+            Discover profiles, match on mutual interest, and start a conversation.
+          </p>
+
+          <div class="feature-strip" aria-label="Key features">
+            <div><strong>01</strong><span>Institute email only</span></div>
+            <div><strong>02</strong><span>Mutual matching</span></div>
+            <div><strong>03</strong><span>Report & block controls</span></div>
+          </div>
+
+          <div class="security-note">
+            <span class="pulse-dot"></span>
+            <div>
+              <strong>Transparent security</strong>
+              <p>Messages use HTTPS in transit and are stored in the configured Google Workspace backend. They are <b>not end-to-end encrypted</b>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="login-card glass">
+          <div class="mini-logo">
+            <img src="logo.svg" alt="" />
+            <span>IITI Spark</span>
+          </div>
+          <h2>Enter the circle</h2>
+          <p class="muted">Use your active IIT Indore Google Workspace account.</p>
+
+          <div class="consent-box">
+            <label class="check-row">
+              <input id="age-check" type="checkbox" />
+              <span>I confirm that I am at least 18 years old.</span>
+            </label>
+            <label class="check-row">
+              <input id="terms-check" type="checkbox" />
+              <span>I accept the <button type="button" class="text-link" data-open-modal="terms-modal">Terms</button> and <button type="button" class="text-link" data-open-modal="privacy-modal">Privacy Notice</button>.</span>
+            </label>
+          </div>
+
+          <div id="google-button" class="google-button-wrap" aria-live="polite"></div>
+          <button id="demo-login" class="btn btn-secondary full hidden" type="button">Open interface preview</button>
+
+          <p id="auth-status" class="status-text" role="status"></p>
+          <p class="fine-print">Only accounts whose verified hosted-domain claim is <code>@iiti.ac.in</code> are accepted by the backend.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-onboarding" class="screen onboarding-screen" aria-labelledby="onboarding-title">
+      <div class="onboarding-card glass">
+        <header class="section-header">
+          <div>
+            <p class="eyebrow">PROFILE SETUP</p>
+            <h2 id="onboarding-title">Show your real vibe, safely.</h2>
+          </div>
+          <button class="icon-btn" id="logout-onboarding" title="Sign out" aria-label="Sign out">↗</button>
+        </header>
+
+        <form id="profile-form" class="profile-form">
+          <div class="photo-editor">
+            <div class="avatar avatar-xl" id="profile-photo-preview"><span>?</span></div>
+            <div>
+              <label for="photo-file" class="btn btn-secondary compact">Upload display photo</label>
+              <input id="photo-file" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+              <button id="use-google-photo" class="text-link block" type="button">Use Google profile photo</button>
+              <p class="fine-print">Upload limit: 1.5 MB. In this Sheets/Drive prototype, uploaded photos use link-accessible Drive URLs.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <label>
+              <span>Display name</span>
+              <input id="display-name" name="displayName" maxlength="40" required placeholder="How people should know you" />
+            </label>
+            <label>
+              <span>Programme</span>
+              <select id="program" name="program" required>
+                <option value="">Select programme</option>
+                <option>B.Tech</option><option>M.Tech</option><option>M.Sc</option><option>Ph.D.</option><option>Other</option>
+              </select>
+            </label>
+            <label>
+              <span>Year</span>
+              <select id="year" name="year" required>
+                <option value="">Select year</option>
+                <option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option>
+              </select>
+            </label>
+            <label>
+              <span>Gender (optional)</span>
+              <select id="gender" name="gender">
+                <option value="">Prefer not to say</option>
+                <option>Woman</option><option>Man</option><option>Non-binary</option><option>Self-described</option>
+              </select>
+            </label>
+            <label class="span-2">
+              <span>Looking to meet</span>
+              <select id="looking-for" name="lookingFor" required>
+                <option value="">Choose one</option>
+                <option>People for dating</option>
+                <option>People for meaningful connections</option>
+                <option>Friends first</option>
+                <option>Open to seeing where it goes</option>
+              </select>
+            </label>
+            <label class="span-2">
+              <span>Bio</span>
+              <textarea id="bio" name="bio" maxlength="280" required placeholder="A few lines about you, your energy, and what makes you curious..."></textarea>
+              <small><span id="bio-count">0</span>/280</small>
+            </label>
+          </div>
+
+          <fieldset class="interest-fieldset">
+            <legend>Choose at least 3 interests</legend>
+            <div id="interest-options" class="chip-grid"></div>
+          </fieldset>
+
+          <label class="check-row discovery-toggle">
+            <input id="allow-discovery" type="checkbox" checked />
+            <span>Show my profile in discovery.</span>
+          </label>
+
+          <button class="btn btn-primary full" type="submit">Save profile & start discovering</button>
+          <p id="profile-status" class="status-text" role="status"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="screen-main" class="screen main-screen" aria-label="IITI Spark application">
+      <header class="topbar glass">
+        <button class="brand-button" data-nav="discover" aria-label="Go to discovery">
+          <img src="logo.svg" alt="" />
+          <span>IITI Spark</span>
+        </button>
+        <div class="top-actions">
+          <span class="security-pill"><i></i> HTTPS + Workspace storage</span>
+          <button id="profile-menu-button" class="avatar avatar-sm" aria-label="Open settings"><span>U</span></button>
+        </div>
+      </header>
+
+      <div class="main-content">
+        <section id="view-discover" class="app-view active" aria-labelledby="discover-title">
+          <div class="view-heading">
+            <div>
+              <p class="eyebrow">DISCOVER</p>
+              <h2 id="discover-title">Campus energy, one card at a time.</h2>
+            </div>
+            <button id="refresh-discover" class="icon-btn" title="Refresh profiles" aria-label="Refresh profiles">↻</button>
+          </div>
+
+          <div class="deck-wrap">
+            <div id="card-deck" class="card-deck" aria-live="polite"></div>
+            <div id="empty-deck" class="empty-state glass hidden">
+              <div class="empty-icon">✦</div>
+              <h3>You reached the end for now.</h3>
+              <p>New profiles will appear when more verified students join or update discovery settings.</p>
+              <button class="btn btn-secondary" id="empty-refresh">Refresh</button>
+            </div>
+          </div>
+
+          <div class="swipe-actions" aria-label="Profile actions">
+            <button id="pass-button" class="swipe-btn pass" aria-label="Pass" title="Pass">×</button>
+            <button id="like-button" class="swipe-btn like" aria-label="Like" title="Like">♥</button>
+          </div>
+        </section>
+
+        <section id="view-matches" class="app-view" aria-labelledby="matches-title">
+          <div class="view-heading">
+            <div>
+              <p class="eyebrow">MUTUAL CONNECTIONS</p>
+              <h2 id="matches-title">Your matches</h2>
+            </div>
+            <button id="refresh-matches" class="icon-btn" aria-label="Refresh matches">↻</button>
+          </div>
+          <div id="matches-list" class="matches-grid"></div>
+          <div id="empty-matches" class="empty-state glass hidden">
+            <div class="empty-icon">♡</div>
+            <h3>No matches yet.</h3>
+            <p>A match appears only when both people independently choose “like”.</p>
+          </div>
+        </section>
+
+        <section id="view-chat" class="app-view chat-view" aria-labelledby="chat-title">
+          <header class="chat-header glass">
+            <button id="chat-back" class="icon-btn" aria-label="Back to matches">←</button>
+            <div id="chat-avatar" class="avatar avatar-md"><span>?</span></div>
+            <div>
+              <h2 id="chat-title">Conversation</h2>
+              <p id="chat-subtitle" class="muted">Messages are not end-to-end encrypted</p>
+            </div>
+            <div class="chat-menu-wrap">
+              <button id="chat-menu-button" class="icon-btn" aria-label="Conversation options">•••</button>
+              <div id="chat-menu" class="popover hidden">
+                <button id="report-user">Report</button>
+                <button id="block-user" class="danger">Block</button>
+              </div>
+            </div>
+          </header>
+          <div id="message-list" class="message-list" aria-live="polite"></div>
+          <form id="message-form" class="message-composer glass">
+            <textarea id="message-input" maxlength="1000" rows="1" placeholder="Write something respectful..." aria-label="Message"></textarea>
+            <button class="send-btn" type="submit" aria-label="Send message">➤</button>
+          </form>
+        </section>
+
+        <section id="view-settings" class="app-view" aria-labelledby="settings-title">
+          <div class="view-heading">
+            <div>
+              <p class="eyebrow">CONTROL CENTER</p>
+              <h2 id="settings-title">Profile, privacy & safety</h2>
+            </div>
+          </div>
+
+          <div class="settings-layout">
+            <div class="settings-card glass">
+              <div class="settings-profile">
+                <div id="settings-avatar" class="avatar avatar-xl"><span>U</span></div>
+                <div>
+                  <h3 id="settings-name">Your profile</h3>
+                  <p id="settings-email" class="muted"></p>
+                  <button id="edit-profile" class="btn btn-secondary compact">Edit profile</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-card glass">
+              <h3>Privacy</h3>
+              <label class="check-row">
+                <input id="settings-discovery" type="checkbox" />
+                <span>Visible in discovery</span>
+              </label>
+              <p class="fine-print">Turning this off hides your card from new discovery results. Existing matches remain.</p>
+            </div>
+
+            <div class="settings-card glass">
+              <h3>Data & security</h3>
+              <p>Messages are transmitted over HTTPS and stored in the app owner’s configured Google Sheets/Drive. This prototype does not provide end-to-end encryption.</p>
+              <button class="text-link" data-open-modal="privacy-modal">Read privacy notice</button>
+              <button class="text-link" data-open-modal="terms-modal">Read terms</button>
+            </div>
+
+            <div class="settings-card glass danger-zone">
+              <h3>Account actions</h3>
+              <button id="logout-button" class="btn btn-secondary full">Sign out</button>
+              <button id="delete-account" class="btn btn-danger full">Delete and anonymize my account</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <nav class="bottom-nav glass" aria-label="Primary navigation">
+        <button class="nav-item active" data-nav="discover"><span>✦</span><b>Discover</b></button>
+        <button class="nav-item" data-nav="matches"><span>♡</span><b>Matches</b></button>
+        <button class="nav-item" data-nav="settings"><span>◉</span><b>Profile</b></button>
+      </nav>
+    </section>
+  </main>
+
+  <dialog id="terms-modal" class="modal glass">
+    <div class="modal-head">
+      <div><p class="eyebrow">TERMS OF USE</p><h2>Respect, consent, authenticity.</h2></div>
+      <button class="icon-btn" data-close-modal="terms-modal" aria-label="Close terms">×</button>
+    </div>
+    <div class="modal-body prose">
+      <p><strong>IITI Spark is an independent student prototype and is not an official IIT Indore service, programme, or endorsement.</strong></p>
+      <h3>Eligibility</h3>
+      <p>You must be 18 or older and use an active, verified <code>@iiti.ac.in</code> account. You may create only one authentic profile and may not impersonate another person.</p>
+      <h3>Consent and conduct</h3>
+      <p>A match does not imply consent to meet, share personal information, or engage in any activity. Harassment, threats, hate, stalking, sexual coercion, doxxing, unsolicited explicit content, and attempts to bypass blocks are prohibited.</p>
+      <h3>Safety</h3>
+      <p>Use report and block controls. Meet in public places, tell a trusted person, and do not share passwords, financial details, OTPs, or sensitive documents. In an emergency, contact appropriate campus or public authorities.</p>
+      <h3>Moderation</h3>
+      <p>The operator may review reported content, restrict accounts, preserve evidence when legally required, or remove the service. Reports should be handled confidentially and only by authorized moderators.</p>
+      <h3>No guarantee</h3>
+      <p>This prototype is provided as-is. Identity is limited to Google account verification; it does not independently verify every profile statement.</p>
+    </div>
+    <button class="btn btn-primary full" data-close-modal="terms-modal">I understand</button>
+  </dialog>
+
+  <dialog id="privacy-modal" class="modal glass">
+    <div class="modal-head">
+      <div><p class="eyebrow">PRIVACY NOTICE</p><h2>Know what is stored.</h2></div>
+      <button class="icon-btn" data-close-modal="privacy-modal" aria-label="Close privacy notice">×</button>
+    </div>
+    <div class="modal-body prose">
+      <p>The prototype stores your Google account identifier, institute email, profile fields, swipes, matches, reports, blocks, session records, and messages in Google Sheets. Optional uploaded photos are stored in Google Drive.</p>
+      <p><strong>It does not collect or store your Google password.</strong> Google sign-in returns a short-lived identity token that the backend verifies. The app should store only a hashed application-session token.</p>
+      <p><strong>Chats are not end-to-end encrypted.</strong> Do not send confidential, medical, financial, intimate, or legally sensitive information.</p>
+      <p>Profile cards do not expose institute email addresses. Administrators with access to the backend spreadsheet can access stored information and must follow a strict least-privilege policy.</p>
+      <p>You can turn off discovery, block users, report misuse, and request account deletion. Deletion anonymizes primary profile fields; legally required safety or audit records may need separate handling by the operator.</p>
+    </div>
+    <button class="btn btn-primary full" data-close-modal="privacy-modal">I understand</button>
+  </dialog>
+
+  <dialog id="match-modal" class="modal match-modal glass">
+    <div class="match-burst">✦</div>
+    <p class="eyebrow">IT'S MUTUAL</p>
+    <h2>You found a spark.</h2>
+    <div class="match-faces">
+      <div id="match-self-avatar" class="avatar avatar-xl"><span>You</span></div>
+      <div class="heart-line">♥</div>
+      <div id="match-other-avatar" class="avatar avatar-xl"><span>?</span></div>
+    </div>
+    <p id="match-message" class="muted">You both liked each other.</p>
+    <button id="start-chat-button" class="btn btn-primary full">Start a respectful conversation</button>
+    <button class="btn btn-ghost full" data-close-modal="match-modal">Keep discovering</button>
+  </dialog>
+
+  <dialog id="report-modal" class="modal glass">
+    <div class="modal-head">
+      <div><p class="eyebrow">SAFETY REPORT</p><h2>Tell the moderator what happened.</h2></div>
+      <button class="icon-btn" data-close-modal="report-modal" aria-label="Close report form">×</button>
+    </div>
+    <form id="report-form">
+      <label>
+        <span>Reason</span>
+        <select id="report-category" required>
+          <option value="">Choose a reason</option>
+          <option>Harassment or threats</option>
+          <option>Fake or impersonating profile</option>
+          <option>Unwanted sexual content</option>
+          <option>Hate or discrimination</option>
+          <option>Spam or scam</option>
+          <option>Safety concern</option>
+          <option>Other</option>
+        </select>
+      </label>
+      <label>
+        <span>Details</span>
+        <textarea id="report-details" maxlength="1000" required placeholder="Include only facts needed to assess the report."></textarea>
+      </label>
+      <button class="btn btn-danger full" type="submit">Submit confidential report</button>
+    </form>
+  </dialog>
+
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
